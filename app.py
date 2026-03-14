@@ -1,14 +1,14 @@
-import os
 import streamlit as st
 import logging
 
 from utils.document_processor import process_uploaded_file
 from utils.rag_utils import get_vectorstore, get_retriever
 from utils.legacy_advisor import get_agent_executor
+from utils.db_logger import log_technical_debt, clear_technical_debt
 from models.embeddings import get_embeddings
 from models.llm import get_llm
 
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,6 +29,40 @@ def instructions_page():
     
     If the bot cannot find the answer in your uploaded code, it will automatically search the web for modern migration guides or best practices.
     """)
+
+def admin_page():
+    st.title("Technical Debt Log")
+    st.markdown("This page displays technical debt identified by the AI across all chat sessions.")
+    
+    try:
+        import sqlite3
+        import pandas as pd
+        
+        conn = sqlite3.connect("admin_logs.db")
+        df = pd.read_sql_query("SELECT timestamp, issues_identified, migration_plan FROM technical_debt ORDER BY id DESC", conn)
+        conn.close()
+        
+        if not df.empty:
+            st.dataframe(
+                df, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "timestamp": st.column_config.DatetimeColumn("Timestamp", width="small"),
+                    "issues_identified": st.column_config.TextColumn("Issues Identified", width="large"),
+                    "migration_plan": st.column_config.TextColumn("Migration Plan", width="large"),
+                }
+            )
+            
+            if st.button("🗑️ Clear Log", use_container_width=True):
+                clear_technical_debt()
+                st.rerun()
+        else:
+            st.info("No technical debt logged yet.")
+            
+    except Exception as e:
+        st.error("Could not load database. Make sure you have chatted with the bot first to generate logs.")
+        logger.error(f"Error loading admin page: {e}")
 
 def chat_page():
     st.title("🤖 Legacy Code Chat")
@@ -115,6 +149,9 @@ def chat_page():
                             })
                             
                             output = response["messages"][-1].content
+                            
+                            log_technical_debt(output)
+                            
                             st.markdown(output)
                             st.session_state.messages.append({"role": "assistant", "content": output})
                         except Exception as e:
@@ -129,7 +166,7 @@ def main():
         st.title("Navigation")
         page = st.radio(
             "Go to:",
-            ["Chat", "Instructions"],
+            ["Chat", "Instructions", "Technical Debt Log"],
             index=0
         )
         
@@ -141,8 +178,10 @@ def main():
     
     if page == "Instructions":
         instructions_page()
-    if page == "Chat":
+    elif page == "Chat":
         chat_page()
+    elif page == "Technical Debt Log":
+        admin_page()
 
 if __name__ == "__main__":
     main()
