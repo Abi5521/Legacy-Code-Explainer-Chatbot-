@@ -44,6 +44,59 @@ streamlit run app.py
 ### Testing the App
 **Dummy Data Included:** There is dummy testing data included directly inside this GitHub repository folder. Feel free to use the provided sample legacy code files to test the indexing, AI explanations, and technical debt extraction features!
 
+### Example Questions
+
+Once you have uploaded a sample file and indexed it, try asking the chatbot questions like the ones below.
+
+---
+
+#### 🖥️ Python Sample (`legacy_emp_data.py`)
+
+> *"What does the `do_everything` function do, and why is it considered bad practice?"*
+
+> *"Are there any security vulnerabilities in this code? Identify them and explain the risks."*
+
+> *"The authentication uses MD5 hashing — is that still secure? What should I replace it with?"*
+
+> *"This code appears to have a SQL injection vulnerability. Can you show me how to fix it using parameterized queries?"*
+
+> *"What is the export path hardcoded in this file, and why is hardcoding file paths a problem in production?"*
+
+
+---
+
+#### 🖥️ COBOL Sample (`payroll_report.cob`)
+
+> *"What does this COBOL program do? Give me a plain-English explanation."*
+
+> *"How is overtime pay calculated in this program? What is the overtime threshold?"*
+
+> *"What are the file I/O operations being performed, and what files does this program read from and write to?"*
+
+> *"How would I migrate this COBOL payroll logic to a modern Python or Java equivalent?"*
+
+
+## Response Modes
+
+The bot supports two response modes, toggled from the sidebar.
+
+### ⚡ Concise Mode
+Structured snapshot for quick triage. Every response includes:
+- **Risk Level** — High / Medium / Low
+- **Summary** — One sentence on what the code does
+- **Critical Issues** — Up to 3 key problems found
+- **Migration Action Plan** — One-sentence next step
+
+### 🔍 Detailed Mode
+Full architectural breakdown for planning a migration. Every response includes:
+- **What It Does** — Plain-English explanation of the code
+- **Security & Risk Analysis** — Vulnerabilities, CVEs, and deprecated patterns
+- **What Breaks If Removed/Changed** — Dependent functions or behaviours
+- **Modern Alternatives** — Specific libraries or frameworks to replace legacy code
+- **Step-by-Step Migration Plan** — Numbered, actionable developer tasks
+
+---
+
 ## Architecture
 - **Frontend:** Streamlit
 - **LLM/Orchestration:** LangChain & Groq (Llama-3.1-8b)
